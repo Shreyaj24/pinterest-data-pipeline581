@@ -43,7 +43,7 @@ Configuration of Amazon EC2 instance to use an Apache Kafka client machine.
         -   By above steps, ARN has necessary permissions to authenticate to the MSK cluster.
     - Step4:
         -   To configure Kafka client to use AWS IAM authentication to the cluster, we need to modify the *client.properties* file inside kafka_folder/bin directorey. If not present we can create it. PSB:
-        ![client.properties](pinterest_img/client_properties_file.JPG)
+        ![client.properties](pinterest_img/Client_properties_file.JPG)
 
 -   **Task4:**
 To create Kafka topics.
