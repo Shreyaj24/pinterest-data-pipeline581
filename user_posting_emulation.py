@@ -10,7 +10,11 @@ from sqlalchemy import text
 
 random.seed(100)
 
+pin_invoke_url = "https://8marlud1ff.execute-api.us-east-1.amazonaws.com/test/topics/0ac1babf620d.pin"
+geo_invoke_url =  "https://8marlud1ff.execute-api.us-east-1.amazonaws.com/test/topics/0ac1babf620d.geo"
+user_invoke_url = "https://8marlud1ff.execute-api.us-east-1.amazonaws.com/test/topics/0ac1babf620d.user"  
 
+                
 class AWSDBConnector:
 
     def __init__(self):
@@ -28,6 +32,13 @@ class AWSDBConnector:
 
 new_connector = AWSDBConnector()
 
+def send_to_kafka(api_invoke_url, payload):
+                headers = {'Content-Type': 'application/vnd.kafka.json.v2+json'}
+                response = requests.post(api_invoke_url , headers=headers, data=payload)
+                print(f'response code: {response.status_code}')
+
+
+                
 
 def run_infinite_post_data_loop():
     while True:
@@ -55,14 +66,41 @@ def run_infinite_post_data_loop():
             for row in user_selected_row:
                 user_result = dict(row._mapping)
             
-            print(pin_result)
-            print(geo_result)
-            print(user_result)
+            #To send JSON messages we need to follow this structure
+            payload_pin = json.dumps({
+                "records":  [
+                    {
+                    #Data should be send as pairs of column_name:value, with different columns separated by commas    
+                    "value": pin_result}
+                ]
+            })
+            payload_geo =json.dumps({
+                "records":  [
+                    {"value":{"ind": geo_result["ind"],"timestamp": str(geo_result["timestamp"]),"latitude"
+            : geo_result["latitude"],"longitude":geo_result["longitude"],"country":geo_result["country"]} }
+                ]
+            })
+            payload_user = json.dumps({
+                "records":  [
+                    {"value":{"ind": user_result["ind"],"first_name":user_result["first_name"],"last_name"
+            : user_result["last_name"],"age": user_result["age"],"date_joined": str(user_result["date_joined"])} }
+                ]
+            })
 
+            send_to_kafka(pin_invoke_url, payload_pin)
+            send_to_kafka(geo_invoke_url, payload_geo)
+            send_to_kafka(user_invoke_url, payload_user)
+            
+            
+
+            # print(pin_result)
+            # print(geo_result)
+            # print(user_result)
+        #break
 
 if __name__ == "__main__":
     run_infinite_post_data_loop()
-    print('Working')
+    #print('Working')
     
     
 
