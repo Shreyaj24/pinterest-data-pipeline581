@@ -137,11 +137,213 @@ Batch Processing: Databricks
         -   geo_df
         -   pin_df
         -   user_df
+## **Milestone7**
+Batch Processing: Spark on Databricks
+-   **Task1:**
+    -   To clean the df_pin DataFrame you should perform the following transformations:
+        - Replace empty entries and entries with no relevant data in each column with Nones:
+        ```
+        cleaned_df_pin = df_pin.replace({'User Info Error': None, 'Image src error.': None}, subset =['follower_count','image_src'])
+        ```
+        -   Perform the necessary transformations on the follower_count to ensure every entry is a number. Make sure the data type of this column is an int.
+            -   Using *contains* and *regex* for the tranformation with *cast*:
+            ```
+            cleaned_df_pin
+                    .withColumn("follower_count", when(col("follower_count").contains("k"), 
+                    regexp_replace("follower_count", "k", "").cast("double") *1000)
+            ```         
+        -   Ensure that each column containing numeric data has a numeric data type
+        -   Clean the data in the save_location column to include only the save location path
+            -   Using *regex_replace* as shown for above transformation.
+        -   Rename the index column to ind.
+            -   For name change used *withColumnRenamed*
+        -   Reorder the DataFrame columns to have the following column order:
+            1.   ind
+            2.   unique_id
+            3.   title
+            4.  description
+            5.  follower_count
+            6.  poster_name
+            7.  tag_list
+            8.  is_image_or_video
+            9.  image_src
+            10. save_location
+            11. category
+            -   For column rearrange use *select*.       
+-   **Task2:**
+    -   To clean the df_geo DataFrame you should perform the following transformations:
+
+        -   Create a new column coordinates that contains an array based on the latitude and longitude columns
+            -   Using *array* combined latitude and longitude
+        -   Drop the latitude and longitude columns from the DataFrame
+            -   Using *drop*
+        -   Convert the timestamp column from a string to a timestamp data type
+            -   Using *to_timestamp*
+        -   Reorder the DataFrame columns to have the following column order:
+            1.  ind
+            2.  country
+            3.  coordinates
+            4.  timestamp
+-   **Task3:**
+    -   To clean the df_user DataFrame you should perform the following transformations:
+
+    -   Create a new column user_name that concatenates the information found in the first_name and last_name columns
+    -   Drop the first_name and last_name columns from the DataFrame
+        -   Using *concat* to join and *lit* for spacing between first name and last name.
+    -   Convert the date_joined column from a string to a timestamp data type
+    -   Reorder the DataFrame columns to have the following column order:
+        1.  ind
+        2.  user_name
+        3.  age
+        4.  date_joined
+-   **Task4:**
+    -   Find the most popular Pinterest category people post to based on their country.
+
+        -   Your query should return a DataFrame that contains the following columns:
+            1.  country
+            2.  category
+            3.  category_count, a new column containing the desired query output
+
+        ```
+        from pyspark.sql.functions import col, sum, avg, count, year, to_date, when, max
+        pin_geo_combined_df = cleaned_df_pin.join(cleaned_df_geo, cleaned_df_geo["ind"] == cleaned_df_pin["ind"], how="inner")
+        #display(pin_geo_combined_df)
+        pin_geo_grouped_df = pin_geo_combined_df.groupBy("country", "category").agg(count("category").alias("category_count")).orderBy("country", col("category_count").desc())
+        display(pin_geo_grouped_df)
+        ```
+        ![Task4](pinterest_img/mil7_task4.JPG)
+-   **Task5:**
+    -   Your query should return a DataFrame that contains the following columns:
+
+        1.  post_year, a new column that contains only the year from the timestamp column
+        2.  category
+        3.  category_count, a new column containing the desired query output
+
+        ```
+        pin_geo_year_df = pin_geo_combined_df.withColumn("post_year", year(col("timestamp")))
+        #display(pin_geo_year_df)
+        #Define year range
+        start_year = 2018
+        end_year = 2022
+        pin_geo_grouped_year_df = pin_geo_year_df \
+            .filter((col("post_year") >= start_year) & (col("post_year") <= end_year)) \
+            .groupBy("post_year", "category") \
+            .agg(count("category").alias("category_count")) \
+            .orderBy("post_year", col("category_count").desc())
+        display(pin_geo_grouped_year_df)
+        ```
+         ![Task5](pinterest_img/mil7_task5.JPG)
+-   **Task6:**
+    -  Your query should return a DataFrame that contains the following columns:
+
+        1.  country
+        2.  poster_name
+        3.  follower_count
+    -   Your query should return a DataFrame that contains the following columns:
+        1.  country
+        2.  follower_count
+    ```
+       pin_geo_followers_df = pin_geo_combined_df \
+         .groupBy("country","poster_name","follower_count") \
+        .agg(sum("follower_count")) \
+        .orderBy("country","poster_name",col("follower_count").desc())    
+        display(pin_geo_followers_df)
+
+       pin_geo_max_follower_df = pin_geo_followers_df \
+        .groupBy("country","follower_count") \
+        .agg(max("follower_count")) \
+        .orderBy("country",col("follower_count").desc())
+
+        display(pin_geo_max_follower_df.limit(1)) 
+    ```
+    ![Task6_1](pinterest_img/mil7_task6_1.JPG)  
+
+    ![Task6](pinterest_img/mil7_task6.JPG)
+
+-   **Task7:**
+    -     the most popular category people post to based on the following age groups:
+
+        1.  18-24
+        2.  25-35
+        3.  36-50
+        4.    +50
+    Your query should return a DataFrame that contains the following columns:
+
+    1.  age_group, a new column based on the original age column
+    2.  category
+    3.  category_count, a new column containing the desired query output      
+    ```
+    pin_user_combined_df = cleaned_df_pin.join(cleaned_df_user, cleaned_df_user["ind"] == cleaned_df_pin["ind"], how="inner")
+    display(pin_user_combined_df)
+    age_group_col = (
+    when((col("age") >= 18) & (col("age") <=24), "18-24")
+    .when((col("age") >= 25) & (col("age") <= 35), "25-35")
+    .when((col("age") >= 36) & (col("age") <= 50), "36-50")
+    .when(col("age") > 50, "+50")
+    )
+    ```
+    ![Task7](pinterest_img/mil7_task7.JPG)
+
+-   **Task8:**
+    -   What is the median follower count for users in the following age groups:
+
+    1.    18-24
+    2.    25-35
+    3.    36-50
+    4.    +50
+    Your query should return a DataFrame that contains the following columns:
+
+    1.  age_group, a new column based on the original age column
+    2.  median_follower_count, a new column containing the desired query output
+    ```
+    # Calculate median for each age group
+    for group in age_groups:
+        group_df = pin_user_df_with_age_groups.filter(col("age_group") == group)
+        median = group_df.approxQuantile("follower_count", [0.5], 0.01)[0]  # Median with approxQuantile
+        age_group_medians.append((group, median))
+    ```
+    ![Task8](pinterest_img/mil7_task8.JPG) 
+
+-   **Task9:**    
+    -   Find how many users have joined between 2015 and 2020.
+
+    -   Your query should return a DataFrame that contains the following columns:
+    1.  post_year, a new column that contains only the year from the timestamp column
+    2.  number_users_joined, a new column containing the desired query output
+    ```
+    # Extract the year from the timestamp column
+    df_with_year = cleaned_df_user.withColumn("post_year", year(col("date_joined")))
+
+    # Filter the DataFrame for users who joined between 2015 and 2020
+    filtered_df = df_with_year.filter((col("post_year") >= 2015) & (col("post_year") <= 2020))
+
+    # Group by the year and count the number of users
+    result_df = filtered_df.groupBy("post_year").agg(count("ind").alias("number_users_joined"))
+
+    # Order the results by year
+    result_df = result_df.orderBy("post_year")
+
+    # Display the result
+    display(result_df)
+    ```
+    ![Task9](pinterest_img/mil7_task9.JPG)
+
+-   **Task10:**  
+    -   Find the median follower count of users have joined between 2015 and 2020.
 
 
+    Your query should return a DataFrame that contains the following columns:
+
+    1.  post_year, a new column that contains only the year from the timestamp column
+    2.  median_follower_count, a new column containing the desired query output
+    ![Task10](pinterest_img/mil7_task10.JPG)
+-   **Task11:**
+    -   Find the median follower count of users that have joined between 2015 and 2020, based on which age group they are part of.
 
 
+    Your query should return a DataFrame that contains the following columns:
 
-
-
-
+    1.  age_group, a new column based on the original age column
+    2.  post_year, a new column that contains only the year from the timestamp column
+    3.  median_follower_count, a new column containing the desired query output
+    ![Task11](pinterest_img/mil7_task11.JPG)
