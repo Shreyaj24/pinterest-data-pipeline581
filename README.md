@@ -347,3 +347,15 @@ Batch Processing: Spark on Databricks
     2.  post_year, a new column that contains only the year from the timestamp column
     3.  median_follower_count, a new column containing the desired query output
     ![Task11](pinterest_img/mil7_task11.JPG)
+
+## **Milestone8**
+Batch Processing: AWS MWAA
+-   **Task1:**    
+    -   Creating an Airflow DAG that triggers the databrick notebook torun daily.
+    -   Uploading the DAG into the S3 bucket associated MWAA environment. 
+    -   The DAG is uploaded with the required details of connectivity and schedule.
+    -   ![Task1](pinterest_img/Databricks_loc.JPG)
+-   **TASK2:**
+    -   After uploading, checking the details in MWW, to open airflow UI to check the DAG and run in manually to verify the DAG is success.
+    -   ![Task2](pinterest_img/Airflow_manual_run.JPG)
+    -   As per above, the DAG runs successfully manually. 
