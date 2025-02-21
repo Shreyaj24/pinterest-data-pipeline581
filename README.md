@@ -355,7 +355,38 @@ Batch Processing: AWS MWAA
     -   Uploading the DAG into the S3 bucket associated MWAA environment. 
     -   The DAG is uploaded with the required details of connectivity and schedule.
     -   ![Task1](pinterest_img/Databricks_loc.JPG)
--   **TASK2:**
+-   **Task2:**
     -   After uploading, checking the details in MWW, to open airflow UI to check the DAG and run in manually to verify the DAG is success.
     -   ![Task2](pinterest_img/Airflow_manual_run.JPG)
     -   As per above, the DAG runs successfully manually. 
+**Task3:**
+    -   user_posting_emulation_streaming.py script is created to send requests to API, which adds one record at a time to the stream. Sending data from the three Pinterest tables to the stream utilising PartitionKey to identify which table each payload belongs to.
+    -   ![Task3](pinterest_img/Kin_with_data.JPG)
+    -   ![Task3](pinterest_img/Kin_with_data1.JPG)
+    -   As per above, the data is streaming in the AWS kinesis.
+**Task4:**
+    -   Step 1:
+    Creating a new Notebook in Databricks and reading in credentials from the Delta table, located at dbfs:/user/hive/warehouse/authentication_credentials, to retrieve the Access Key and Secret Access Key.
+
+
+    -   Step 2:
+    Running method to ingest data into Kinesis Data Streams. 
+
+    -   Step 3:
+
+    Reading the data from the three streams we have created in Databricks Notebook.
+    -   ![Task4](pinterest_img/dbr_pin.JPG)
+    -   ![Task4](pinterest_img/dbr_geo.JPG)
+    -   ![Task4](pinterest_img/dbr_user.JPG)
+    -   As per above, the data is streaming into databricks nb now.
+-   **Task5**
+    -   Cleaning the streaming data in the same way it has been done for the batch data.
+-   **Task6**
+    -   Once the streaming data has been cleaned, Now writing each stream into delta tables as below:
+    <your_UserId>_pin_table, <your_UserId>_geo_table and <your_UserId>_user_table.
+    -   ![Task4](pinterest_img/del_pin.JPG)
+    -   ![Task4](pinterest_img/del_geo.JPG)
+    -   ![Task4](pinterest_img/del_user.JPG)
+
+-   **CONCLUSION**
+    - With this project, we have achieved the cleaning and transformation of batch data and similar with the streaming of data using AWS Kinesis.
